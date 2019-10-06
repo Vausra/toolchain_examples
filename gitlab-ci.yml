@@ -1,0 +1,33 @@
+stages:
+    - build
+    - doxygen
+
+Build (Debian 9 / make / clang):
+    stage: build
+    image: windows10
+    script:
+        - apt-get update -qq && apt-get install -y -qq git make clang
+        - CC=clang CXX=clang++ make
+
+clang-tidy:
+    image: EnterSomeWindowsTarget...
+    variables:
+        CC: clang-tidy (actually should be clang-cl for windows)
+        CXX: clang++ (actually should be clang-cl for windows)
+    before_script:
+        -pacman -Syu --needed --noconfirm clang-tools-extra=6.0.1-2
+        -clang-tidy --version
+    script:
+        - clang-tidy -warnings-as-errors="*" -checks="-*,clang-analyzer-*"
+        
+doxygen:
+    image: alpine:3.7
+    before_script:
+        - apk update
+        - apk add --no-cache -t .required_apks doygen=1.8.13-r1 gradle
+        - mkdir -p build/docs
+    script:
+        - doxygen docs/Doxyfile
+    artifacts:
+        paths:
+            - build/docs/html/
